@@ -1,10 +1,10 @@
 <template>
-  <div class="person-card" :class="{ activeCard: personInfo.id == current }">
+  <div class="person-card" :class="{ activeCard: personInfo.id == pcCurrent }">
     <div class="info">
       <HeadPortrait :imgUrl="personInfo.headImg" v-show="personInfo.showHeadImg" />
       <div class="info-detail">
-        <div class="name">{{ personInfo.name.slice(0, 16) }}</div>
-        <div class="detail">{{ personInfo.lastMsg.slice(0, 19) }}</div>
+        <div class="name">{{ personInfo.name ? personInfo.name.slice(0, 20) : (personInfo.fineTunesStatus=="pending" ? "正在训练..." : "已取消") }}</div>
+        <div class="detail">{{ personInfo.lastMsg.slice(0, 22) }}</div>
       </div>
     </div>
   </div>
@@ -38,7 +38,7 @@ export default {
   methods: {
     isActive() {
       this.current = this.pcCurrent;
-    },
+    }
   },
 };
 </script>

@@ -1,5 +1,6 @@
 import base from './index'
 import { AI_HEAD_IMG_URL } from '../store/mutation-types'
+import { generateUUID } from "@/util/util";
 let axios = base.axios
 let baseUrl = base.baseUrl
 
@@ -59,6 +60,7 @@ function produceModelDesc(model) {
     return desc
   }
 }
+
 
 // 获取模型列表
 export const getModels = token => {
@@ -178,7 +180,7 @@ export const createFineTune = (formData, token) => {
     baseURL: `${baseUrl}/v1/fine-tunes`,
     headers: {
       'Authorization': 'Bearer ' + token,
-      'Content-Type': 'multipart/form-data'
+      'Content-Type':  'application/json'
     },
     data: formData
   }).then(res => {
@@ -188,17 +190,33 @@ export const createFineTune = (formData, token) => {
 
 
 // 列出微调
-export const getFineTunesList = (formData, token) => {
+export const getFineTunesList = token => {
   return axios({
     method: 'get',
     baseURL: `${baseUrl}/v1/fine-tunes`,
     headers: {
       'Authorization': 'Bearer ' + token,
-      'Content-Type': 'multipart/form-data'
-    },
-    data: formData
+      'Content-Type': 'application/json'
+    }
   }).then(res => {
-    return res.data;
+    console.log(res)
+    const fineTunesObjs = []
+    res.data.data.forEach(fineTunes => {
+      let fineTunesObj = {
+        img: "",
+        name: fineTunes.fine_tuned_model,
+        detail: "基于"+fineTunes.model+"微调创建的模型",
+        lastMsg: "基于"+fineTunes.model+"微调创建的模型",
+        id: fineTunes.fine_tuned_model?fineTunes.fine_tuned_model:generateUUID(),
+        headImg: AI_HEAD_IMG_URL,
+        showHeadImg: true,
+        createTime: fineTunes.created_at,
+        fineTunesId:fineTunes.id,
+        fineTunesStatus:fineTunes.status
+      }
+      fineTunesObjs.push(fineTunesObj)
+    });
+    return fineTunesObjs.sort((a, b) => b.createTime - a.createTime);
   })
 }
 
@@ -227,9 +245,8 @@ export const cancelFineTune = (fineTuneId, token) => {
     baseURL: `${baseUrl}/v1/fine-tunes/` + fineTuneId + '/cancel',
     headers: {
       'Authorization': 'Bearer ' + token,
-      'Content-Type': 'multipart/form-data"'
-    },
-    data: fineTuneId
+      'Content-Type': 'application/json'
+    }
   }).then(res => {
     return res.data;
   })
@@ -250,22 +267,64 @@ export const getFineTuneEventsList = (fineTuneId, token) => {
   })
 }
 
-// 取消微调
+// 删除微调
 export const deleteFineTuneModel = (model, token) => {
   return axios({
     method: 'delete',
     baseURL: `${baseUrl}/v1/models/` + model,
     headers: {
       'Authorization': 'Bearer ' + token,
-      'Content-Type': 'multipart/form-data'
-    },
-    data: model
+      'Content-Type': 'application/json'
+    }
   }).then(res => {
     return res.data;
   })
 }
 
 
+//获取文件列表
+export const getFilesList = token => {
+  return axios({
+    method: 'get',
+    baseURL: `${baseUrl}/v1/files`,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    }
+  }).then(res => {
+    console.log(res)
+    const fileObjs = []
+    res.data.data.forEach(file => {
+      let fileObj = {
+        img: "",
+        name: file.filename,
+        detail: "文件ID是:"+file.id+",文件大小是:"+file.bytes/1024/1024+"MB",
+        lastMsg: "文件ID是:"+file.id+",文件大小是:"+file.bytes/1024/1024+"MB",
+        id: file.filename,
+        createTime: file.created_at,
+      }
+      fileObjs.push(fileObj)
+    });
+    return fileObjs.sort((a, b) => b.createTime - a.createTime);
+  })
+}
+
+// 上传JSONL文件
+export const uploadFile = (formData, token) => {
+  return axios({
+    method: 'post',
+    baseURL: `${baseUrl}/v1/files`,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'multipart/form-data'
+    },
+    data: formData
+  }).then(res => {
+    console.log("文件上传成功")
+    console.log(res)
+    return res.data;
+  })
+}
 
 
 // 获取账号余额信息
